@@ -43,7 +43,7 @@ uv run streamlit run src/hr_breaker/main.py
 
 ### Web UI
 
-Launch with `uv run streamlit run src/hr_breaker/main.py`
+Launch with `uv run hr-breaker ui` (or `uv run streamlit run src/hr_breaker/main.py`)
 
 1. Paste or upload resume
 2. Enter job URL or description

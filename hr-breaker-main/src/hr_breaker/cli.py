@@ -1,6 +1,8 @@
 """CLI interface for HR-Breaker."""
 
 import asyncio
+import subprocess
+import sys
 from pathlib import Path
 
 import click
@@ -149,6 +151,26 @@ def list_history():
             f"[{exists}] {pdf.path.name} - {pdf.job_title} @ {pdf.company} "
             f"({pdf.timestamp.strftime('%Y-%m-%d %H:%M')})"
         )
+
+
+@cli.command("ui")
+@click.option("--host", default="localhost", show_default=True, help="Host to bind the UI server")
+@click.option("--port", default=8501, show_default=True, type=int, help="Port for the UI server")
+def launch_ui(host: str, port: int):
+    """Launch the Streamlit web UI."""
+    app_path = Path(__file__).with_name("main.py")
+    cmd = [
+        sys.executable,
+        "-m",
+        "streamlit",
+        "run",
+        str(app_path),
+        "--server.address",
+        host,
+        "--server.port",
+        str(port),
+    ]
+    raise SystemExit(subprocess.call(cmd))
 
 
 def _get_job_text(job_input: str) -> str:
