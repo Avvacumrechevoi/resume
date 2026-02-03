@@ -12,6 +12,7 @@ from hr_breaker.config import get_settings
 from hr_breaker.models import GeneratedPDF, ResumeSource
 from hr_breaker.orchestration import optimize_for_job
 from hr_breaker.services import PDFStorage, scrape_job_posting, ScrapingError, CloudflareBlockedError
+from hr_breaker.services.pdf_parser import extract_text_from_pdf
 
 
 @click.group()
@@ -49,7 +50,10 @@ def optimize(
     if not settings.google_api_key:
         raise click.ClickException("GOOGLE_API_KEY not set in environment")
 
-    resume_content = resume_path.read_text()
+    if resume_path.suffix.lower() == ".pdf":
+        resume_content = extract_text_from_pdf(resume_path)
+    else:
+        resume_content = resume_path.read_text()
 
     # Get job text (sync - may need user interaction for Cloudflare)
     job_text = _get_job_text(job_input)
