@@ -1,0 +1,73 @@
+name: Process uploads
+
+on:
+  push:
+    paths:
+      - "uploads/**"
+  workflow_dispatch:
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libcairo2 \
+            libgdk-pixbuf2.0-0 \
+            libpango-1.0-0 \
+            libpangocairo-1.0-0 \
+            libffi-dev \
+            shared-mime-info
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Resolve uploaded files
+        id: resolve
+        run: |
+          if [ -n "${{ github.event.before }}" ]; then
+            git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" > changed.txt
+          else
+            : > changed.txt
+          fi
+          python scripts/resolve_uploads.py --changed-files changed.txt
+
+      - name: Run optimization
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+        run: |
+          if [ -z "${{ steps.resolve.outputs.resume_path }}" ]; then
+            echo "Missing resume file"
+            exit 1
+          fi
+          if [ -z "${{ steps.resolve.outputs.job_input }}" ]; then
+            echo "Missing job input"
+            exit 1
+          fi
+          if [ -z "${GOOGLE_API_KEY}" ]; then
+            echo "GOOGLE_API_KEY secret is not set"
+            exit 1
+          fi
+          uv run hr-breaker optimize "${{ steps.resolve.outputs.resume_path }}" "${{ steps.resolve.outputs.job_input }}"
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: optimized-resume
+          path: |
+            output/*.pdf
+            output/index.json
