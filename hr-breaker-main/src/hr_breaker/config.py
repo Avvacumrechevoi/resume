@@ -28,10 +28,21 @@ def setup_logging() -> logging.Logger:
 logger = setup_logging()
 
 
+def _normalize_google_base_url(value: str) -> str:
+    cleaned = value.strip()
+    if not cleaned:
+        return ""
+    cleaned = cleaned.rstrip("/")
+    if cleaned.endswith("/v1"):
+        cleaned = cleaned[:-3]
+    return cleaned
+
+
 class Settings(BaseModel):
     """Application settings."""
 
     google_api_key: str = ""
+    google_api_base_url: str = ""
     gemini_pro_model: str = "gemini-3-pro-preview"
     gemini_flash_model: str = "gemini-3-flash-preview"
     gemini_thinking_budget: int | None = 8192
@@ -82,6 +93,9 @@ def get_settings() -> Settings:
         thinking_budget = int(thinking_env) if thinking_env else None
     return Settings(
         google_api_key=os.getenv("GOOGLE_API_KEY", ""),
+        google_api_base_url=_normalize_google_base_url(
+            os.getenv("GOOGLE_API_BASE_URL", "")
+        ),
         gemini_pro_model=os.getenv("GEMINI_PRO_MODEL") or "gemini-3-pro-preview",
         gemini_flash_model=os.getenv("GEMINI_FLASH_MODEL") or "gemini-3-flash-preview",
         gemini_thinking_budget=thinking_budget,
@@ -131,10 +145,13 @@ def get_settings() -> Settings:
 def get_model_settings() -> dict[str, Any] | None:
     """Get GoogleModelSettings with thinking config if budget is set."""
     settings = get_settings()
+    model_settings: dict[str, Any] = {}
     if settings.gemini_thinking_budget is not None:
-        return {
-            "google_thinking_config": {
-                "thinking_budget": settings.gemini_thinking_budget
-            }
+        model_settings["google_thinking_config"] = {
+            "thinking_budget": settings.gemini_thinking_budget
         }
-    return None
+    if settings.google_api_base_url:
+        model_settings["http_options"] = {
+            "base_url": settings.google_api_base_url
+        }
+    return model_settings or None
