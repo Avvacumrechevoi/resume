@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
+from pydantic_ai.models.google import GoogleModel
+from pydantic_ai.providers.google import GoogleProvider
 from pydantic import BaseModel
 
 load_dotenv()
@@ -150,15 +152,19 @@ def get_model_settings() -> dict[str, Any] | None:
         model_settings["google_thinking_config"] = {
             "thinking_budget": settings.gemini_thinking_budget
         }
-    if settings.google_api_base_url:
-        try:
-            from google.genai import types
-
-            model_settings["http_options"] = types.HttpOptions(
-                base_url=settings.google_api_base_url
-            )
-        except Exception:
-            model_settings["http_options"] = {
-                "base_url": settings.google_api_base_url
-            }
     return model_settings or None
+
+
+@lru_cache
+def get_google_provider() -> GoogleProvider:
+    settings = get_settings()
+    base_url = settings.google_api_base_url or None
+    return GoogleProvider(api_key=settings.google_api_key, base_url=base_url)
+
+
+def get_google_model(model_name: str) -> GoogleModel:
+    return GoogleModel(
+        model_name,
+        provider=get_google_provider(),
+        settings=get_model_settings(),
+    )
