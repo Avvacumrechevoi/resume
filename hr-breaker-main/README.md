@@ -43,7 +43,7 @@ uv run streamlit run src/hr_breaker/main.py
 
 ### Web UI
 
-Launch with `uv run streamlit run src/hr_breaker/main.py`
+Launch with `uv run hr-breaker ui` (or `uv run streamlit run src/hr_breaker/main.py`)
 
 1. Paste or upload resume
 2. Enter job URL or description
@@ -68,6 +68,16 @@ uv run hr-breaker optimize resume.txt job.txt --no-shame
 # List generated PDFs
 uv run hr-breaker list
 ```
+
+### GitHub Actions (upload from GitHub web UI)
+
+1. Add `GOOGLE_API_KEY` in **Settings → Secrets and variables → Actions**.
+2. Upload files to `uploads/` via **Add file → Upload files**:
+   - `uploads/resume.pdf` (or `.txt`, `.md`, `.tex`)
+   - `uploads/job.txt` (or `uploads/job.md`)
+   - Optional: `uploads/job_url.txt` (contains a job posting URL)
+3. The **Process uploads** workflow runs automatically.
+4. Download the optimized PDF from the workflow **Artifacts**.
 
 ## Output
 

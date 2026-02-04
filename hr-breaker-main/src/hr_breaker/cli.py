@@ -1,6 +1,8 @@
 """CLI interface for HR-Breaker."""
 
 import asyncio
+import subprocess
+import sys
 from pathlib import Path
 
 import click
@@ -10,6 +12,7 @@ from hr_breaker.config import get_settings
 from hr_breaker.models import GeneratedPDF, ResumeSource
 from hr_breaker.orchestration import optimize_for_job
 from hr_breaker.services import PDFStorage, scrape_job_posting, ScrapingError, CloudflareBlockedError
+from hr_breaker.services.pdf_parser import extract_text_from_pdf
 
 
 @click.group()
@@ -47,7 +50,10 @@ def optimize(
     if not settings.google_api_key:
         raise click.ClickException("GOOGLE_API_KEY not set in environment")
 
-    resume_content = resume_path.read_text()
+    if resume_path.suffix.lower() == ".pdf":
+        resume_content = extract_text_from_pdf(resume_path)
+    else:
+        resume_content = resume_path.read_text()
 
     # Get job text (sync - may need user interaction for Cloudflare)
     job_text = _get_job_text(job_input)
@@ -149,6 +155,26 @@ def list_history():
             f"[{exists}] {pdf.path.name} - {pdf.job_title} @ {pdf.company} "
             f"({pdf.timestamp.strftime('%Y-%m-%d %H:%M')})"
         )
+
+
+@cli.command("ui")
+@click.option("--host", default="localhost", show_default=True, help="Host to bind the UI server")
+@click.option("--port", default=8501, show_default=True, type=int, help="Port for the UI server")
+def launch_ui(host: str, port: int):
+    """Launch the Streamlit web UI."""
+    app_path = Path(__file__).with_name("main.py")
+    cmd = [
+        sys.executable,
+        "-m",
+        "streamlit",
+        "run",
+        str(app_path),
+        "--server.address",
+        host,
+        "--server.port",
+        str(port),
+    ]
+    raise SystemExit(subprocess.call(cmd))
 
 
 def _get_job_text(job_input: str) -> str:
