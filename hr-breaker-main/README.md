@@ -87,7 +87,8 @@ uv run hr-breaker list
 
 ## Configuration
 
-Copy `.env.example` to `.env` and set `GOOGLE_API_KEY` (required). See `.env.example` for all available options.
+Set `GOOGLE_API_KEY` (required). For API gateways/proxies, set `GOOGLE_API_BASE_URL`
+to the custom base URL (for Gemini-compatible endpoints, use the root URL without `/v1`).
 
 ---
 

@@ -36,7 +36,12 @@ class VectorSimilarityMatcher(BaseFilter):
                 suggestions=["Ensure PDF compilation succeeds"],
             )
 
-        client = genai.Client(api_key=settings.google_api_key)
+        client_kwargs = {"api_key": settings.google_api_key}
+        if settings.google_api_base_url:
+            client_kwargs["http_options"] = types.HttpOptions(
+                base_url=settings.google_api_base_url
+            )
+        client = genai.Client(**client_kwargs)
 
         resume_text = optimized.pdf_text
         job_text = f"{job.title} {job.description} {' '.join(job.requirements)}"

@@ -49,6 +49,7 @@ jobs:
       - name: Run optimization
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          GOOGLE_API_BASE_URL: ${{ secrets.GOOGLE_API_BASE_URL || vars.GOOGLE_API_BASE_URL }}
           GEMINI_PRO_MODEL: gemini-2.5-flash
           GEMINI_FLASH_MODEL: gemini-2.5-flash
           GEMINI_THINKING_BUDGET: "1024"
