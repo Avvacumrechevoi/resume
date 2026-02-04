@@ -3,7 +3,7 @@ name: Process uploads
 on:
   push:
     paths:
-      - "uploads/**"
+      - "hr-breaker-main/uploads/**"
   workflow_dispatch:
 
 jobs:
@@ -33,6 +33,7 @@ jobs:
         uses: astral-sh/setup-uv@v3
 
       - name: Install dependencies
+        working-directory: hr-breaker-main
         run: uv sync --frozen
 
       - name: Resolve uploaded files
@@ -43,11 +44,12 @@ jobs:
           else
             : > changed.txt
           fi
-          python scripts/resolve_uploads.py --changed-files changed.txt
+          python hr-breaker-main/scripts/resolve_uploads.py --changed-files changed.txt --uploads-dir hr-breaker-main/uploads
 
       - name: Run optimization
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+        working-directory: hr-breaker-main
         run: |
           if [ -z "${{ steps.resolve.outputs.resume_path }}" ]; then
             echo "Missing resume file"
@@ -69,5 +71,5 @@ jobs:
         with:
           name: optimized-resume
           path: |
-            output/*.pdf
-            output/index.json
+            hr-breaker-main/output/*.pdf
+            hr-breaker-main/output/index.json

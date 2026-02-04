@@ -86,7 +86,7 @@ def main() -> int:
         print("job file not found (expected uploads/job.txt or uploads/job.md)")
         return 1
 
-    job_input = job_path.as_posix()
+    job_input = job_path.resolve().as_posix()
     if job_path.stem == "job_url":
         url = job_path.read_text().strip()
         if not url:
@@ -94,7 +94,7 @@ def main() -> int:
             return 1
         job_input = url
 
-    _write_output("resume_path", resume_path.as_posix())
+    _write_output("resume_path", resume_path.resolve().as_posix())
     _write_output("job_input", job_input)
     return 0
 
