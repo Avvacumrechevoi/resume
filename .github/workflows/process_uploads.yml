@@ -49,6 +49,9 @@ jobs:
       - name: Run optimization
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          GEMINI_PRO_MODEL: gemini-2.5-flash
+          GEMINI_FLASH_MODEL: gemini-2.5-flash
+          GEMINI_THINKING_BUDGET: "1024"
         working-directory: hr-breaker-main
         run: |
           if [ -z "${{ steps.resolve.outputs.resume_path }}" ]; then
