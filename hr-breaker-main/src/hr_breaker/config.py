@@ -151,7 +151,14 @@ def get_model_settings() -> dict[str, Any] | None:
             "thinking_budget": settings.gemini_thinking_budget
         }
     if settings.google_api_base_url:
-        model_settings["http_options"] = {
-            "base_url": settings.google_api_base_url
-        }
+        try:
+            from google.genai import types
+
+            model_settings["http_options"] = types.HttpOptions(
+                base_url=settings.google_api_base_url
+            )
+        except Exception:
+            model_settings["http_options"] = {
+                "base_url": settings.google_api_base_url
+            }
     return model_settings or None
